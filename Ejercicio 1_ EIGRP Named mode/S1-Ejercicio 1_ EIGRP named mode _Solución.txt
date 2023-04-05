@@ -1,0 +1,203 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: EIGRP named mode  
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+      
+	  
+Escenario: Openwebinars requiere desplegar EIGRP en su entorno WAN para proporcionar conectividad entre sus sedes
+
+Completa los siguientes puntos para implementar EIGRP en Classic y Named mode
+_____________________________________________________________________________________
+
+Verifica si existe conectividad entre PC1 (10.10.10.2), PC2 (172.16.1.2) y PC3 (192.168.1.2)
+
+Respuesta: No hay conectividad entre PCs
+
+PC1> ping 10.10.10.1
+84 bytes from 10.10.10.1 icmp_seq=1 ttl=255 time=15.220 ms
+
+PC1> ping 172.16.1.2
+*10.10.10.1 icmp_seq=1 ttl=255 time=15.217 ms (ICMP type:3, code:1, Destination host unreachable)
+*10.10.10.1 icmp_seq=2 ttl=255 time=15.325 ms (ICMP type:3, code:1, Destination host unreachable)
+
+PC1> ping 192.168.1.2
+*10.10.10.1 icmp_seq=1 ttl=255 time=15.224 ms (ICMP type:3, code:1, Destination host unreachable)
+*10.10.10.1 icmp_seq=2 ttl=255 time=15.412 ms (ICMP type:3, code:1, Destination host unreachable)
+
+
+PC3> ping 172.16.1.2
+172.16.1.2 icmp_seq=1 timeout
+*192.168.1.1 icmp_seq=2 ttl=255 time=15.332 ms (ICMP type:3, code:1, Destination host unreachable)
+*192.168.1.1 icmp_seq=3 ttl=255 time=15.243 ms (ICMP type:3, code:1, Destination host unreachable)
+
+_____________________________________________________________________________________
+
+2. Configura el proceso EIGRP classic mode con AS 100 en R1, las interfaces no deben estar activas por defecto en el proceso a excepción de f0/0 y f1/0, el router-id asignado debe ser la IP 1.1.1.1
+
+R1#
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#router eigrp 100
+R1(config-router)#passive-interface default
+R1(config-router)#no passive-interface fa0/0
+R1(config-router)#no passive-interface fa1/0
+R1(config-router)#eigrp router-id 1.1.1.1
+R1(config-router)#end
+R1#
+
+_____________________________________________________________________________________
+
+3. Configura el proceso EIGRP nombrado como ENARSI con AS 100 en R2, las interfaces no deben estar activas por defecto en el proceso a excepción de f0/0 y f1/0, el router-id asignado debe ser la IP 1.1.1.2
+
+R2#
+R2#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R2(config)#r
+R2(config)#router eigrp ENARSI
+R2(config-router)#
+R2(config-router)#address-family ipv4 unicast autonomous-system 100
+R2(config-router-af)#
+R2(config-router-af)#af-interface default
+R2(config-router-af-interface)#passive-interface
+R2(config-router-af-interface)#exit
+R2(config-router-af)#
+R2(config-router-af)#af-interface fast0/0
+R2(config-router-af-interface)#no passive-interface
+R2(config-router-af-interface)#exit
+R2(config-router-af)#af-int
+R2(config-router-af)#af-interface fa1/0
+R2(config-router-af-interface)#no passive-interface
+R2(config-router-af)#
+R2(config-router-af)#eigrp router-id 1.1.1.2
+R2(config-router-af)#end
+R2#
+_____________________________________________________________________________________
+
+4. Configura el proceso EIGRP nombrado como CCNP con AS 100 en R3, las interfaces no deben estar activas por defecto en el proceso a excepción de f0/0 y f1/0, el router-id asignado debe ser la IP 3.3.3.2
+
+R3#
+R3#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R3(config)#router eigrp CCNP
+R3(config-router)#address-family ipv4 unicast autonomous-system 100
+R3(config-router-af)#
+R3(config-router-af)#af-interface default
+R3(config-router-af-interface)#passive-interface
+R3(config-router-af-interface)#exit
+R3(config-router-af)#af-interface fa0/0
+R3(config-router-af-interface)#no passive-interface
+R3(config-router-af-interface)#exit
+R3(config-router-af)#af-interface fa1/0
+R3(config-router-af-interface)#no passive-interface
+R3(config-router-af-interface)#exit
+R3(config-router-af)#
+R3(config-router-af)#eigrp router-id 3.3.3.2
+R3(config-router-af)#end
+R3#
+R3#
+_____________________________________________________________________________________
+
+5. Anuncia las redes de interconexión en el proceso EIGRP de cada router, para que puedan establecer relación de vecendidad
+
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#router ei
+R1(config)#router eigrp 100
+R1(config-router)#network 1.1.1.0 0.0.0.3
+R1(config-router)#network 2.2.2.0 0.0.0.3
+R1(config-router)#exit
+R1(config)#
+R1(config)#end
+
+R2#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R2(config)#router eigrp ENARSI
+R2(config-router)#address-family ipv4 unicast autonomous-system 100
+R2(config-router-af)#network 1.1.1.0 0.0.0.3
+R2(config-router-af)#network 3.3.3.0 0.0.0.3
+R2(config-router-af)#end
+R2#
+
+R3#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R3(config)#router eigrp CCNP
+R3(config-router)#address-family ipv4 unicast autonomous-system 100
+R3(config-router-af)#network 2.2.2.0 0.0.0.3
+R3(config-router-af)#network 3.3.3.0 0.0.0.3
+R3(config-router-af)#end
+R3#
+R3#
+
+R1#show ip eigrp neighbors
+EIGRP-IPv4 Neighbors for AS(100)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+1   2.2.2.2                 Fa1/0                    10 00:00:30 1601  5000  0  7
+0   1.1.1.2                 Fa0/0                    13 00:00:31 1588  5000  0  7
+R1#
+
+R2#show ip eigrp neighbors
+EIGRP-IPv4 VR(ENARSI) Address-Family Neighbors for AS(100)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+1   1.1.1.1                 Fa0/0                    11 00:00:43   43   258  0  5
+0   3.3.3.2                 Fa1/0                    12 00:01:42   48   288  0  6
+R2#
+
+R3#show ip eigrp neighbors
+EIGRP-IPv4 VR(CCNP) Address-Family Neighbors for AS(100)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+1   2.2.2.1                 Fa0/0                    11 00:00:53   55   330  0  6
+0   3.3.3.1                 Fa1/0                    14 00:01:53 1282  5000  0  6
+R3#
+
+_____________________________________________________________________________________
+
+6. Anuncia en R1 la red LAN de PC1 en el proceso EIGRP 100, realiza la misma acción en R2 y R3 para las redes LAN de PC2 y PC3 respectivamente
+
+R1#
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#router ei
+R1(config)#router eigrp 100
+R1(config-router)#network 10.10.10.0 0.0.0.255
+R1(config-router)#end
+
+R2#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R2(config)#router eigrp ENARSI
+R2(config-router)#address-family ipv4 unicast autonomous-system 100
+R2(config-router-af)#net
+R2(config-router-af)#network 172.16.1.0 0.0.0.3
+R2(config-router-af)#network 172.16.1.0 0.0.0.255
+R2(config-router-af)#end
+R2#
+R2#
+
+R3# conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R3(config)#router ei
+R3(config)#router eigrp CCNP
+R3(config-router)#address-family ipv4 unicast autonomous-system 100
+R3(config-router-af)#network 192.168.1.0 0.0.0.255
+R3(config-router-af)#end
+R3#
+_____________________________________________________________________________________
+
+7. Verifica si existe conectividad entre PC1 (10.10.10.2), PC2 (172.16.1.2) y PC3 (192.168.1.2)
+
+PC1> ping 172.16.1.2
+84 bytes from 172.16.1.2 icmp_seq=1 ttl=62 time=90.530 ms
+
+PC1> ping 192.168.1.2
+84 bytes from 192.168.1.2 icmp_seq=3 ttl=62 time=60.391 ms
+84 bytes from 192.168.1.2 icmp_seq=4 ttl=62 time=60.347 ms
+
+PC2> ping 172.16.1.2
+172.16.1.2 icmp_seq=1 ttl=64 time=0.001 ms
+172.16.1.2 icmp_seq=2 ttl=64 time=0.001 ms
+172.16.1.2 icmp_seq=3 ttl=64 time=0.001 ms
+172.16.1.2 icmp_seq=4 ttl=64 time=0.001 ms
+172.16.1.2 icmp_seq=5 ttl=64 time=0.001 ms
+_____________________________________________________________________________________

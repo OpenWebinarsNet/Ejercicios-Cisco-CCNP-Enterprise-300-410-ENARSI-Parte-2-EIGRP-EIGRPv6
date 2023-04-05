@@ -1,0 +1,26 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: Laboratorio EIGRPv6  
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+      
+	  
+Escenario: Openwebinars requiere desplegar EIGRPv6 en su entorno WAN para proporcionar conectividad entre dos de sus sedes
+
+Completa los siguientes puntos para implementar EIGRPv6 en Classic y Named mode
+
+
+1. Habilita el enrutamiento unicast IPv6 en R1 y R2
+2. Activa el proceso EIGRPv6 para el AS 100 en R1 en base al modo de configuración clásico/classic, todas las interfaces han de ser pasivas a excepción de fe0/0, el router-id asociado es 1.1.1.1 y se debe anunciar la red de Lo0 (3000::2/64)
+3. Activa el proceso EIGRPv6 para el AS 100 en R2 en base al modo de configuración nombrado/named, el nombre asociado debe ser "ENARSI", todas las interfaces han de ser pasivas a excepción de fe0/0 y el router-id asociado es 2.2.2.2
+4. Activa el proceso EIGRPv6 en las interfaces Fe0/0 de R1 y R2 dentro del AS 100
+5. Verifica que se ha establecido adyacencia EIGRPv6 entre los neighbors R1 y R2
+6. Verifica la conectividad desde R2 a la dirección IPv6 red LAN de R1 (3000::2/64), verifica a su vez la topology table y la tabla de rutas en R2
+
+
+
+
+
+
+
+
+

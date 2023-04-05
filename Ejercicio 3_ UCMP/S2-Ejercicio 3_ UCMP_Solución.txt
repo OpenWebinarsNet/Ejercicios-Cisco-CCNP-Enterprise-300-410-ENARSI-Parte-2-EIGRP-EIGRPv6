@@ -1,0 +1,195 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: UCMP
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+         
+	  
+Escenario: Openwebinars requiere implementar balanceo de carga a través de su red WAN
+
+Realiza las siguientes tareas para implementar balanceo de carga a través de EIGRP UCMP
+
+1. Comprueba la conectividad de PC1 a las redes LAN de R1 (192.168.0.1 y 192.168.1.1). Verifica en R5 como se aprenden las redes LAN de R1 (192.168.0.0 y 192.168.1.0)
+
+PC1> ping 192.168.0.1
+84 bytes from 192.168.0.1 icmp_seq=1 ttl=253 time=95.443 ms
+
+PC1> ping 192.168.1.1
+84 bytes from 192.168.1.1 icmp_seq=1 ttl=253 time=101.167 ms
+
+R5#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      1.0.0.0/30 is subnetted, 1 subnets
+D        1.1.1.0 [90/158720] via 6.6.6.1, 00:04:24, FastEthernet1/0
+      2.0.0.0/30 is subnetted, 1 subnets
+D        2.2.2.0 [90/153600] via 5.5.5.1, 00:04:24, FastEthernet0/0
+      3.0.0.0/30 is subnetted, 1 subnets
+D        3.3.3.0 [90/107520] via 6.6.6.1, 00:04:21, FastEthernet1/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, Serial3/0
+L        4.4.4.2/32 is directly connected, Serial3/0
+      5.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        5.5.5.0/30 is directly connected, FastEthernet0/0
+L        5.5.5.2/32 is directly connected, FastEthernet0/0
+      6.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        6.6.6.0/30 is directly connected, FastEthernet1/0
+L        6.6.6.2/32 is directly connected, FastEthernet1/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+D     192.168.0.0/24 [90/2667520] via 6.6.6.1, 00:04:24, FastEthernet1/0
+D     192.168.1.0/24 [90/2667520] via 6.6.6.1, 00:04:24, FastEthernet1/0
+R5#
+
+_____________________________________________________________________________________
+
+2. Verifica en la topología de EIGRP en R5 las redes LAN de R1, que métricas tienen los diferentes anuncios desde los neighbors ?
+
+Respuesta: Presentan las siguientes métricas R4(341442560/328990720), R3(347340800/340787200) y R2(1964953600/340787200)
+
+R5#show ip eigrp topology
+EIGRP-IPv4 VR(enarsi) Topology Table for AS(100)/ID(5.5.5.5)
+Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply,
+       r - reply Status, s - sia Status
+
+P 5.5.5.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet0/0
+P 192.168.0.0/24, 1 successors, FD is 341442560
+        via 6.6.6.1 (341442560/328990720), FastEthernet1/0
+        via 5.5.5.1 (347340800/340787200), FastEthernet0/0
+        via 4.4.4.1 (1964953600/340787200), Serial3/0
+P 2.2.2.0/30, 1 successors, FD is 19660800
+        via 5.5.5.1 (19660800/13107200), FastEthernet0/0
+        via 6.6.6.1 (20316160/13762560), FastEthernet1/0
+P 192.168.1.0/24, 1 successors, FD is 341442560
+        via 6.6.6.1 (341442560/328990720), FastEthernet1/0
+        via 5.5.5.1 (347340800/340787200), FastEthernet0/0
+        via 4.4.4.1 (1964953600/340787200), Serial3/0
+P 6.6.6.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet1/0
+P 3.3.3.0/30, 1 successors, FD is 13762560
+        via 6.6.6.1 (13762560/1310720), FastEthernet1/0
+P 1.1.1.0/30, 1 successors, FD is 20316160
+        via 6.6.6.1 (20316160/13762560), FastEthernet1/0
+        via 5.5.5.1 (26214400/19660800), FastEthernet0/0
+        via 4.4.4.1 (1637273600/13107200), Serial3/0
+P 4.4.4.0/30, 1 successors, FD is 1630720000
+        via Connected, Serial3/0
+P 10.10.10.0/24, 1 successors, FD is 13107200
+        via Connected, FastEthernet2/0
+
+_____________________________________________________________________________________
+
+3. En el proceso EIGRP nombrado como "enarsi" aplica UCMP a través del uso de un valor variance de 10 en R5, de tal forma que todos los anuncios sean permitidos
+
+R5#con ft
+% Ambiguous command:  "con ft"
+R5#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R5(config)#router eigrp enarsi
+R5(config-router)#address-family ipv4 unicast autonomous-system 100
+R5(config-router-af)#topology base
+R5(config-router-af-topology)#variance 10
+R5(config-router-af-topology)#end
+R5#
+
+R5#show ip protocols | in variance
+      Maximum metric variance 10
+
+_____________________________________________________________________________________
+
+4. Comprueba la conectividad de PC1 a las redes LAN de R1 (192.168.0.1 y 192.168.1.1). Verifica en R5 como se aprenden las redes LAN de R1 (192.168.0.0 y 192.168.1.0)
+
+Respuesta: Se aprenden a través de los tres neighbors EIGRP (R2, R3 y R4)
+
+PC1> ping 192.168.0.1
+84 bytes from 192.168.0.1 icmp_seq=1 ttl=253 time=101.379 ms
+84 bytes from 192.168.0.1 icmp_seq=2 ttl=253 time=101.633 ms
+
+PC1> ping 192.168.1.1
+84 bytes from 192.168.1.1 icmp_seq=1 ttl=253 time=101.273 ms
+
+PC1>
+
+R5#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      1.0.0.0/30 is subnetted, 1 subnets
+D        1.1.1.0 [90/158720] via 6.6.6.1, 00:02:20, FastEthernet1/0
+                 [90/204800] via 5.5.5.1, 00:02:20, FastEthernet0/0
+      2.0.0.0/30 is subnetted, 1 subnets
+D        2.2.2.0 [90/158720] via 6.6.6.1, 00:02:20, FastEthernet1/0
+                 [90/153600] via 5.5.5.1, 00:02:20, FastEthernet0/0
+      3.0.0.0/30 is subnetted, 1 subnets
+D        3.3.3.0 [90/107520] via 6.6.6.1, 00:02:20, FastEthernet1/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, Serial3/0
+L        4.4.4.2/32 is directly connected, Serial3/0
+      5.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        5.5.5.0/30 is directly connected, FastEthernet0/0
+L        5.5.5.2/32 is directly connected, FastEthernet0/0
+      6.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        6.6.6.0/30 is directly connected, FastEthernet1/0
+L        6.6.6.2/32 is directly connected, FastEthernet1/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+D     192.168.0.0/24 [90/2667520] via 6.6.6.1, 00:02:20, FastEthernet1/0
+                     [90/2713600] via 5.5.5.1, 00:02:20, FastEthernet0/0
+                     [90/15351200] via 4.4.4.1, 00:02:20, Serial3/0
+D     192.168.1.0/24 [90/2667520] via 6.6.6.1, 00:02:20, FastEthernet1/0
+                     [90/2713600] via 5.5.5.1, 00:02:20, FastEthernet0/0
+                     [90/15351200] via 4.4.4.1, 00:02:20, Serial3/0
+
+_____________________________________________________________________________________
+
+5. Verifica el balanceo de carga UCMP aplicado para las redes LAN de R1 en R5, qué valores han sido asignados ?
+
+Respuesta: Se han asignado valores de 120, 118 y 21, priorizando el envío a través de R4
+
+R5#show ip route 192.168.0.0
+Routing entry for 192.168.0.0/24
+  Known via "eigrp 100", distance 90, metric 2667520, type internal
+  Redistributing via eigrp 100
+  Last update from 4.4.4.1 on Serial3/0, 00:04:47 ago
+  Routing Descriptor Blocks:
+  * 6.6.6.1, from 6.6.6.1, 00:04:47 ago, via FastEthernet1/0
+      Route metric is 2667520, traffic share count is 120
+      Total delay is 5110 microseconds, minimum bandwidth is 100000 Kbit
+      Reliability 255/255, minimum MTU 1500 bytes
+      Loading 1/255, Hops 2
+    5.5.5.1, from 5.5.5.1, 00:04:47 ago, via FastEthernet0/0
+      Route metric is 2713600, traffic share count is 118
+      Total delay is 5200 microseconds, minimum bandwidth is 100000 Kbit
+      Reliability 255/255, minimum MTU 1500 bytes
+      Loading 1/255, Hops 2
+    4.4.4.1, from 4.4.4.1, 00:04:47 ago, via Serial3/0
+      Route metric is 15351200, traffic share count is 21
+      Total delay is 25100 microseconds, minimum bandwidth is 2048 Kbit
+      Reliability 255/255, minimum MTU 1500 bytes
+      Loading 1/255, Hops 2
+R5#
+R5#show ip route 192.168.1.0
+Routing entry for 192.168.1.0/24
+  Known via "eigrp 100", distance 90, metric 2667520, type internal
+  Redistributing via eigrp 100
+  Last update from 4.4.4.1 on Serial3/0, 00:04:49 ago
+  Routing Descriptor Blocks:
+  * 6.6.6.1, from 6.6.6.1, 00:04:49 ago, via FastEthernet1/0
+      Route metric is 2667520, traffic share count is 120
+      Total delay is 5110 microseconds, minimum bandwidth is 100000 Kbit
+      Reliability 255/255, minimum MTU 1500 bytes
+      Loading 1/255, Hops 2
+    5.5.5.1, from 5.5.5.1, 00:04:49 ago, via FastEthernet0/0
+      Route metric is 2713600, traffic share count is 118
+      Total delay is 5200 microseconds, minimum bandwidth is 100000 Kbit
+      Reliability 255/255, minimum MTU 1500 bytes
+      Loading 1/255, Hops 2
+    4.4.4.1, from 4.4.4.1, 00:04:49 ago, via Serial3/0
+      Route metric is 15351200, traffic share count is 21
+      Total delay is 25100 microseconds, minimum bandwidth is 2048 Kbit
+      Reliability 255/255, minimum MTU 1500 bytes
+      Loading 1/255, Hops 2
+R5#
+_____________________________________________________________________________________
+

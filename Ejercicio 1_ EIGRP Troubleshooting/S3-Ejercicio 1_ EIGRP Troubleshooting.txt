@@ -1,0 +1,30 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: EIGRP Troubleshooting  
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+      
+	  
+Escenario: Desde Openwebinars nos indican que han desplegado nuevas sedes pero no tienen conectividad a las redes LAN remotas 
+
+Verifica que está sucediendo y corrige los problemas que se presenten para establecer conectividad en el entorno WAN y LAN de Openwebinars
+
+
+1. Verifica si existe conectividad desde PC1 (10.10.10.2) a PC2 (172.16.1.2) y PC3 (192.168.1.2)
+2. Verifica desde R1 si se aprenden las redes a nivel EIGRP, en caso negativo, verifica la configuración EIGRP y si existe adyacencia con los vecinos EIGRP 
+3. En la conexión entre R1 y R2, verifica si las interfaces físicas de conexión están activas, comprueba si hay respuesta ICMP (ping) entre las IP's de la red de interconexión entre R1 y R2
+4. Analiza en la configuración EIGRP en R2, para averiguar qué está sucediendo, modificala con el fin de establecer la adyacencia EIGRP entre los neighbors R1 y R2. Recuerda el proceso de troubleshooting 
+(interface down, AS's diferentes, parametro network incorrecto, passive interfaces, k values distintos, diferentes subredes de interconexión, claves de autenticación distintas, acl's denegación o diferentes timers)
+5. Establecida la adyacencia EIGRP entre R1 y R2, verifica si desde PC1 (10.10.10.2) ya hay conectividad con PC2 (172.16.1.2)
+6. Realiza el mismo análisis en R3 con el fin de establecer la adyacencia EIGRP entre los neighbors R1 y R3
+7. Establecida la adyacencia EIGRP entre R1 y R3, verifica si desde PC1 (10.10.10.2) ya existe conectividad con PC3 (192.168.1.2)
+
+
+
+
+
+
+
+
+
+
+

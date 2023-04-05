@@ -1,0 +1,251 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: EIGRP Troubleshooting  
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+      
+	  
+Escenario: Escenario: Desde Openwebinars nos indican que han desplegado nuevas sedes pero no tienen conectividad a las redes LAN remotas 
+
+Verifica que está sucediendo y corrige los problemas que se presenten para establecer conectividad en el entorno WAN y LAN de Openwebinars
+
+
+1. Verifica si existe conectividad desde PC1 (10.10.10.2) a PC2 (172.16.1.2) y PC3 (192.168.1.2)
+
+Respuesta: no hay conectividad
+
+PC1> ping 172.16.1.2
+172.16.1.2 icmp_seq=1 timeout
+*10.10.10.1 icmp_seq=2 ttl=255 time=15.489 ms (ICMP type:3, code:1, Destination host unreachable)
+*10.10.10.1 icmp_seq=3 ttl=255 time=18.340 ms (ICMP type:3, code:1, Destination host unreachable)
+
+PC1> ping 192.168.1.2
+*10.10.10.1 icmp_seq=1 ttl=255 time=15.738 ms (ICMP type:3, code:1, Destination host unreachable)
+*10.10.10.1 icmp_seq=2 ttl=255 time=15.841 ms (ICMP type:3, code:1, Destination host unreachable)
+
+PC1>
+_____________________________________________________________________________________
+
+2. Verifica desde R1 si se aprenden las redes LAN de R2 y R3 a nivel EIGRP, en caso negativo, verifica la configuración EIGRP y si existe adyacencia con los vecinos EIGRP 
+
+Respuesta: No se aprenden las redes LAN de R2 y R3 en R1, la configuración EIGRP aparentemente es correcto y no hay adyacencia con los vecinos
+
+R1#
+R1#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      1.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        1.1.1.0/30 is directly connected, FastEthernet1/0
+L        1.1.1.1/32 is directly connected, FastEthernet1/0
+      2.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        2.2.2.0/30 is directly connected, FastEthernet2/0
+L        2.2.2.1/32 is directly connected, FastEthernet2/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet0/0
+L        10.10.10.1/32 is directly connected, FastEthernet0/0
+R1#
+R1#show run | section eigrp
+ ip authentication mode eigrp 100 md5
+ ip authentication key-chain eigrp 100 enarsi
+router eigrp 100
+ network 1.1.1.0 0.0.0.255
+ network 2.2.2.0 0.0.0.255
+ network 10.10.10.0 0.0.0.255
+ passive-interface default
+ no passive-interface FastEthernet2/0
+ no passive-interface FastEthernet1/0
+R1#
+R1#show ip eigrp neighbors
+EIGRP-IPv4 Neighbors for AS(100)
+R1#
+R1#
+
+_____________________________________________________________________________________
+
+3. En la conexión entre R1 y R2, verifica si las interfaces físicas de conexión están activas, comprueba si hay respuesta ICMP (ping) entre las IP's de la red de interconexión entre R1 y R2
+
+Respuesta: Las interfaces físicas de conexión están activas y la red de interconexión responde a ICMP
+
+R1#show int fa1/0
+FastEthernet1/0 is up, line protocol is up
+  Hardware is DEC21140, address is ca01.35a8.001c (bia ca01.35a8.001c)
+
+R1#show ip int brief | in 1/0
+FastEthernet1/0        1.1.1.1         YES NVRAM  up                    up
+
+R1#ping 1.1.1.2
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 1.1.1.2, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 24/32/40 ms
+R1#
+
+
+R2#show int fa1/0
+FastEthernet1/0 is up, line protocol is up
+
+R2#show ip int brief | in 1/0
+FastEthernet1/0        1.1.1.2         YES NVRAM  up                    up
+
+_____________________________________________________________________________________
+
+4. Analiza en la configuración EIGRP en R2, para averiguar qué está sucediendo, modificala con el fin de establecer la adyacencia EIGRP entre los neighbors R1 y R2
+
+Respuesta: en R2 se visualiza que el AS configurado para EIGRP es diferente, se modifica al AS 100. Aún así sigue sin haber adyacencia, se visualiza que el parametro network para la red de interconexión (1.1.1.0) es incorrecto marcando únicamente la ip 1.1.1.0/32, se modifica.
+Al modificarlo se activa la adyacencia con el neighbor
+
+R2#show run | section eigrp
+router eigrp 200
+ network 1.1.1.0 0.0.0.0
+ network 172.16.1.0 0.0.0.255
+ passive-interface default
+ no passive-interface FastEthernet1/0
+R2#
+
+R2#show run | section eigrp
+router eigrp 100
+ network 1.1.1.0 0.0.0.0
+ network 172.16.1.0 0.0.0.255
+ passive-interface default
+ no passive-interface FastEthernet1/0
+R2#
+
+R2#show ip eigrp neighbors
+EIGRP-IPv4 Neighbors for AS(100)
+R2#
+
+R2#show ip eigrp neighbors
+EIGRP-IPv4 Neighbors for AS(100)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+0   1.1.1.1                 Fa1/0                    11 00:00:27   60   360  0  3
+R2#
+R2#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      1.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        1.1.1.0/30 is directly connected, FastEthernet1/0
+L        1.1.1.2/32 is directly connected, FastEthernet1/0
+      2.0.0.0/30 is subnetted, 1 subnets
+D        2.2.2.0 [90/30720] via 1.1.1.1, 00:00:32, FastEthernet1/0
+      10.0.0.0/24 is subnetted, 1 subnets
+D        10.10.10.0 [90/30720] via 1.1.1.1, 00:00:32, FastEthernet1/0
+      172.16.0.0/16 is variably subnetted, 2 subnets, 2 masks
+C        172.16.1.0/24 is directly connected, FastEthernet0/0
+L        172.16.1.1/32 is directly connected, FastEthernet0/0
+R2#
+
+_____________________________________________________________________________________
+
+5. Establecida la adyacencia EIGRP entre R1 y R2, verifica si desde PC1 (10.10.10.2) ya hay conectividad con PC2 (172.16.1.2)
+
+Respuesta: Si, ya hay conectividad entre PC1 y PC2
+
+PC1> ping 172.16.1.2
+84 bytes from 172.16.1.2 icmp_seq=1 ttl=62 time=78.368 ms
+
+_____________________________________________________________________________________
+
+6. Realiza el mismo análisis en R3 con el fin de establecer la adyacencia EIGRP entre los neighbors R1 y R3
+
+Respuesta: a nivel físico y de interconexión todo es correcto, pero en R3 hay un passive-interface default sin especificar la interfaz de interconexión como no-passive, corregido sigue sin haber adyacencia
+Se visualiza autenticación, la key definida entre neighbors es distinta, se unifica sobre key-string "ccnp" en R1
+
+R1#show int fas2/0 | in line protocol
+FastEthernet2/0 is up, line protocol is up
+R1#
+R1#show ip int brief | in 2/0
+FastEthernet2/0        2.2.2.1         YES NVRAM  up                    up
+R1#
+R1#ping 2.2.2.2
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 2.2.2.2, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 28/34/44 ms
+R1#
+
+R3#show int fa2/0 | in line protocol
+FastEthernet2/0 is up, line protocol is up
+R3#
+R3#show ip int brief | in 2/0
+FastEthernet2/0        2.2.2.2         YES NVRAM  up                    up
+R3#
+
+R3#show run | section eigrp
+ ip authentication mode eigrp 100 md5
+ ip authentication key-chain eigrp 100 enarsi
+router eigrp 100
+ network 2.2.2.0 0.0.0.255
+ network 192.168.1.0
+ passive-interface default
+R3#
+
+
+R3#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R3(config)#router eigrp 100
+R3(config-router)#no pas
+R3(config-router)#no passive-interface fa2/0
+R3(config-router)#end
+R3#
+
+
+R1#show run int fa2/0
+Building configuration...
+
+Current configuration : 166 bytes
+!
+interface FastEthernet2/0
+ ip address 2.2.2.1 255.255.255.252
+ ip authentication mode eigrp 100 md5
+ ip authentication key-chain eigrp 100 enarsi
+ duplex full
+end
+
+R1#
+R1#show run | section key
+key chain enarsi
+ key 1
+   key-string openwebinars
+ ip authentication key-chain eigrp 100 enarsi
+R1#
+
+
+R3#show run int fa2/0
+Building configuration...
+
+Current configuration : 166 bytes
+!
+interface FastEthernet2/0
+ ip address 2.2.2.2 255.255.255.252
+ ip authentication mode eigrp 100 md5
+ ip authentication key-chain eigrp 100 enarsi
+ duplex full
+end
+
+R3#show run | se
+R3#show run | section key
+key chain enarsi
+ key 1
+   key-string ccnp
+ ip authentication key-chain eigrp 100 enarsi
+R3#
+
+R1#
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#key cha
+R1(config)#key chain enarsi
+R1(config-keychain)#key 1
+R1(config-keychain-key)#key-string ccnp
+R1(config-keychain-key)#end
+R1#
+_____________________________________________________________________________________
+
+7. Establecida la adyacencia EIGRP entre R1 y R3, verifica si desde PC1 (10.10.10.2) ya existe conectividad con PC3 (192.168.1.2)
+
+PC1>
+PC1> ping 192.168.1.2
+84 bytes from 192.168.1.2 icmp_seq=1 ttl=62 time=84.343 ms
+84 bytes from 192.168.1.2 icmp_seq=2 ttl=62 time=62.757 ms
+
+

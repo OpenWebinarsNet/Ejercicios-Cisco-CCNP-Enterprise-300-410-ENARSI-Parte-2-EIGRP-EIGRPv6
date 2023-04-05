@@ -1,0 +1,154 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: Filtrado y sumarización de ruta 
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+          
+	  
+Escenario: Openwebinars requiere la implementación de sumarización y filtrado de rutas dentro de su red WAN
+
+Completa las siguientes tareas para implementar sumarización y filtrado de rutas en EIGRP 
+
+
+1. Verifica la conectividad desde PC1 hacía las redes LAN de R1 (192.168.0.1 y 192.168.1.1), cómo se aprenden estas redes en R4 ?
+
+Respuesta: Vía EIGRP a través de los neighbors 4.4.4.1/R3 y 3.3.3.1/R2
+
+PC1> ping 192.168.0.1
+84 bytes from 192.168.0.1 icmp_seq=1 ttl=253 time=122.015 ms
+84 bytes from 192.168.0.1 icmp_seq=2 ttl=253 time=91.949 ms
+
+PC1> ping 192.168.1.1
+84 bytes from 192.168.1.1 icmp_seq=1 ttl=253 time=101.465 ms
+84 bytes from 192.168.1.1 icmp_seq=2 ttl=253 time=101.834 ms
+
+R4#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      1.0.0.0/30 is subnetted, 1 subnets
+D        1.1.1.0 [90/153600] via 3.3.3.1, 00:02:53, FastEthernet1/0
+      2.0.0.0/30 is subnetted, 1 subnets
+D        2.2.2.0 [90/153600] via 4.4.4.1, 00:02:53, FastEthernet0/0
+      3.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        3.3.3.0/30 is directly connected, FastEthernet1/0
+L        3.3.3.2/32 is directly connected, FastEthernet1/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, FastEthernet0/0
+L        4.4.4.2/32 is directly connected, FastEthernet0/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+D     192.168.0.0/24 [90/2713600] via 4.4.4.1, 00:02:53, FastEthernet0/0
+                     [90/2713600] via 3.3.3.1, 00:02:53, FastEthernet1/0
+D     192.168.1.0/24 [90/2713600] via 4.4.4.1, 00:02:53, FastEthernet0/0
+                     [90/2713600] via 3.3.3.1, 00:02:53, FastEthernet1/0
+_____________________________________________________________________________________
+
+2. Sumariza las redes LAN de R1 (192.168.0.1 y 192.168.1.1) para que solo anunciar la ruta sumarizada 192.168.0.0/23 al resto de neighbors EIGRP, valida desde R4 que la sumarización se ha implementado correctamente
+
+R1#
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#int fa0/0
+R1(config-if)#ip summary-address eigrp 100 192.168.0.0 255.255.254.0
+R1(config-if)#exit
+R1(config)#int fa1/0
+R1(config-if)#ip summary-address eigrp 100 192.168.0.0 255.255.254.0
+R1(config-if)#end
+R1#
+
+R4#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      1.0.0.0/30 is subnetted, 1 subnets
+D        1.1.1.0 [90/153600] via 3.3.3.1, 00:16:46, FastEthernet1/0
+      2.0.0.0/30 is subnetted, 1 subnets
+D        2.2.2.0 [90/153600] via 4.4.4.1, 00:16:46, FastEthernet0/0
+      3.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        3.3.3.0/30 is directly connected, FastEthernet1/0
+L        3.3.3.2/32 is directly connected, FastEthernet1/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, FastEthernet0/0
+L        4.4.4.2/32 is directly connected, FastEthernet0/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+D     192.168.0.0/23 [90/2713600] via 4.4.4.1, 00:00:41, FastEthernet0/0
+                     [90/2713600] via 3.3.3.1, 00:00:41, FastEthernet1/0
+R4#
+
+_____________________________________________________________________________________
+
+3. Configura filtrado de rutas en R4, para qué solo se aprenda la red 192.168.0.0/23 desde el neighbor 4.4.4.1 / R3
+
+R4#
+R4#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R4(config)#ip prefix-list FILTER_NET_IN seq 5 permit 192.168.0.0/23
+R4(config)#
+R4(config)#ip prefix-list FILTER_GW seq 5 permit 4.4.4.1/32
+R4(config)#
+R4(config)#router eigrp enarsi
+R4(config-router)#
+R4(config-router)#address-family ipv4 unicast autonomous-system 100
+R4(config-router-af)#topology base
+R4(config-router-af-topology)#distribute-list prefix FILTER_NET_IN gateway FILTER_GW in
+R4(config-router-af-topology)#end
+R4#
+R4#
+
+R4#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      3.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        3.3.3.0/30 is directly connected, FastEthernet1/0
+L        3.3.3.2/32 is directly connected, FastEthernet1/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, FastEthernet0/0
+L        4.4.4.2/32 is directly connected, FastEthernet0/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+D     192.168.0.0/23 [90/2713600] via 4.4.4.1, 00:00:50, FastEthernet0/0
+R4#
+_____________________________________________________________________________________
+
+4. Verifica la conectividad desde PC1 hacía las redes LAN de R1 (192.168.0.1 y 192.168.1.1), cómo se aprenden estas redes en R4 ?
+
+Respuesta: Se aprenden a través de la ruta sumarizada 192.168.0.0/23 anunciada por el neighbor R3 / 4.4.4.1
+
+PC1> ping 192.168.1.1
+84 bytes from 192.168.1.1 icmp_seq=1 ttl=253 time=101.552 ms
+
+PC1> ping 192.168.0.1
+84 bytes from 192.168.0.1 icmp_seq=1 ttl=253 time=101.378 ms
+
+PC1> trace 192.168.1.1
+trace to 192.168.1.1, 8 hops max, press Ctrl+C to stop
+ 1   10.10.10.1   20.526 ms  20.396 ms  10.670 ms
+ 2   4.4.4.1   60.724 ms  61.618 ms  60.970 ms
+ 3   *2.2.2.1   101.479 ms (ICMP type:3, code:3, Destination port unreachable)
+
+PC1> trace 192.168.0.1
+trace to 192.168.0.1, 8 hops max, press Ctrl+C to stop
+ 1   10.10.10.1   20.795 ms  20.533 ms  20.540 ms
+ 2   4.4.4.1   61.006 ms  61.107 ms  61.115 ms
+ 3   *2.2.2.1   103.395 ms (ICMP type:3, code:3, Destination port unreachable)
+
+PC1>
+
+R4#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      3.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        3.3.3.0/30 is directly connected, FastEthernet1/0
+L        3.3.3.2/32 is directly connected, FastEthernet1/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, FastEthernet0/0
+L        4.4.4.2/32 is directly connected, FastEthernet0/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+D     192.168.0.0/23 [90/2713600] via 4.4.4.1, 00:02:35, FastEthernet0/0
+R4#
+_____________________________________________________________________________________
+

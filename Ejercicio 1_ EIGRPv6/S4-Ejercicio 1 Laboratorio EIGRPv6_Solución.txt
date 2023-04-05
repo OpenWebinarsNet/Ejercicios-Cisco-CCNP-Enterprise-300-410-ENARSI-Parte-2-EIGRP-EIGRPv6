@@ -1,0 +1,152 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: Laboratorio EIGRPv6  
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+          
+	  
+Escenario: Openwebinars requiere desplegar EIGRPv6 en su entorno WAN para proporcionar conectividad entre dos de sus sedes
+
+Completa los siguientes puntos para implementar EIGRPv6 en Classic y Named mode
+
+
+1. Habilita el enrutamiento unicast IPv6 en R1 y R2
+
+R1#
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#ipv6 unicast-routing
+R1(config)#end
+R1#
+
+R2#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R2(config)#ipv6 unic
+R2(config)#ipv6 unicast-routing
+R2(config)#end
+R2#
+_____________________________________________________________________________________
+
+2. Activa el proceso EIGRPv6 para el AS 100 en R1 en base al modo de configuración clásico/classic, todas las interfaces han de ser pasivas a excepción de fe0/0, el router-id asociado es 1.1.1.1 y se debe anunciar la red de Lo0 (3000::2/64)
+
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#ipv6 router eigrp 100
+R1(config-rtr)#passive-interface default
+R1(config-rtr)#no passive-interface fa0/0
+R1(config-rtr)#eigrp router-id 1.1.1.1
+R1(config-rtr)#exit
+R1(config)#int lo0
+R1(config-if)#ipv6 eigrp 100
+R1(config-if)#end
+R1#
+
+_____________________________________________________________________________________
+
+3. Activa el proceso EIGRPv6 para el AS 100 en R2 en base al modo de configuración nombrado/named, el nombre asociado debe ser "ENARSI", todas las interfaces han de ser pasivas a excepción de fe0/0 y el router-id asociado es 2.2.2.2
+
+R2#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R2(config)#ipv6 unic
+R2(config)#ipv6 unicast-routing
+R2(config)#end
+R2#
+*Oct 30 23:36:02.707: %SYS-5-CONFIG_I: Configured from console by console
+R2#
+R2#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R2(config)#router eigrp enarsi
+R2(config-router)#addres
+R2(config-router)#address-family ipv6 uni
+R2(config-router)#address-family ipv6 aut
+R2(config-router)#address-family ipv6 autonomous-system 100
+R2(config-router-af-interface)#pas
+R2(config-router-af-interface)#passive-interface
+R2(config-router-af-interface)#exit
+R2(config-router-af)#af-interface fastEthernet 0/0
+R2(config-router-af-interface)#no passive-interface
+R2(config-router-af-interface)#exit
+R2(config-router-af)#exit
+R2(config-router)#address-family ipv6 autonomous-system 100
+R2(config-router-af)#eigrp router-id 2.2.2.2
+R2(config-router-af)#end
+R2#
+_____________________________________________________________________________________
+
+4. Activa el proceso EIGRPv6 en las interfaces Fe0/0 de R1 y R2 dentro del AS 100
+
+R1(config)#int fa0/0
+R1(config-if)#ipv6 eigrp 100
+R1(config-if)#end
+
+R2#conf t
+R2(config)#
+R2(config)#router eigrp enarsi
+R2(config-router)#address-family ipv6 autonomous-system 100
+R2(config-router-af)#int fa0/0
+R2(config-if)#ipv6 eigrp 100
+R2(config-if)#end
+R2#
+_____________________________________________________________________________________
+
+5. Verifica que se ha establecido adyacencia EIGRPv6 entre los neighbors R1 y R2, a través de que dirección IPv6 se ha establecido ?
+
+Respuesta: A través de la dirección IPv6 link-local
+
+R1#show ipv6 eigrp neighbors
+EIGRP-IPv6 Neighbors for AS(100)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+0   Link-local address:     Fa0/0                    13 00:01:40   62   372  0  6
+    FE80::C802:3AFF:FE60:0
+R1#
+
+R2#show ipv6 eigrp neighbors
+EIGRP-IPv6 VR(enarsi) Address-Family Neighbors for AS(100)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+0   Link-local address:     Fa0/0                    12 00:01:47   62   372  0  4
+    FE80::C801:30FF:FE50:0
+R2#
+_____________________________________________________________________________________
+
+6. Verifica la conectividad desde R2 a la dirección IPv6 red LAN de R1 (3000::2/64), verifica a su vez la topology table y la tabla de rutas en R2
+
+R2#
+R2#ping 3000::2
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 3000::2, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 24/55/124 ms
+R2#
+R2#show ipv6 eigrp topology
+EIGRP-IPv6 VR(enarsi) Topology Table for AS(100)/ID(2.2.2.2)
+Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply,
+       r - reply Status, s - sia Status
+
+P 3000::/64, 1 successors, FD is 340787200
+        via FE80::C801:30FF:FE50:0 (340787200/327761920), FastEthernet0/0
+P 2000::/64, 1 successors, FD is 13107200
+        via Connected, FastEthernet0/0
+
+R2#
+R2#show ipv6 route
+IPv6 Routing Table - default - 4 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, R - RIP, H - NHRP, I1 - ISIS L1
+       I2 - ISIS L2, IA - ISIS interarea, IS - ISIS summary, D - EIGRP
+       EX - EIGRP external, ND - ND Default, NDp - ND Prefix, DCE - Destination
+       NDr - Redirect, O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1
+       OE2 - OSPF ext 2, ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, l - LISP
+C   2000::/64 [0/0]
+     via FastEthernet0/0, directly connected
+L   2000::2/128 [0/0]
+     via FastEthernet0/0, receive
+D   3000::/64 [90/2662400]
+     via FE80::C801:30FF:FE50:0, FastEthernet0/0
+L   FF00::/8 [0/0]
+     via Null0, receive
+R2#
+R2#
+_____________________________________________________________________________________
+
+

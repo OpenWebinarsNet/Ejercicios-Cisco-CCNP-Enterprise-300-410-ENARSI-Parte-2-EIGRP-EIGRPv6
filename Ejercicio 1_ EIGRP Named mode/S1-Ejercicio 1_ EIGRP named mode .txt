@@ -1,0 +1,27 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: EIGRP named mode  
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+      
+	  
+Escenario: Openwebinars requiere desplegar EIGRP en su entorno WAN para proporcionar conectividad entre sus sedes
+
+Completa los siguientes puntos para implementar EIGRP en Classic y Named mode
+
+
+1. Verifica si existe conectividad entre PC1 (10.10.10.2), PC2 (172.16.1.2) y PC3 (192.168.1.2)
+2. Configura el proceso EIGRP classic mode con AS 100 en R1, las interfaces no deben estar activas por defecto en el proceso a excepción de f0/0 y f1/0, el router-id asignado debe ser la IP 1.1.1.1
+3. Configura el proceso EIGRP nombrado como ENARSI con AS 100 en R2, las interfaces no deben estar activas por defecto en el proceso a excepción de f0/0 y f1/0, el router-id asignado debe ser la IP 1.1.1.2
+4. Configura el proceso EIGRP nombrado como CCNP con AS 100 en R3, las interfaces no deben estar activas por defecto en el proceso a excepción de f0/0 y f1/0, el router-id asignado debe ser la IP 3.3.3.2
+5. Anuncia las redes de interconexión en el proceso EIGRP de cada router, para que puedan establecer adyacencia EIGRP, verifica la misma una vez implementado el anuncio de las redes
+6. Anuncia en R1 la red LAN de PC1 en el proceso EIGRP 100, realiza la misma acción en R2 y R3 para las redes LAN de PC2 y PC3 respectivamente
+7. Verifica si existe conectividad entre PC1 (10.10.10.2), PC2 (172.16.1.2) y PC3 (192.168.1.2)
+
+
+
+
+
+
+
+
+

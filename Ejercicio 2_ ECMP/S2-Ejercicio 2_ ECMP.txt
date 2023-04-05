@@ -1,0 +1,25 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: ECMP
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+      
+	  
+Escenario: Openwebinars requiere modificar su entorno WAN mediante el uso de ECMP
+
+Realiza las siguientes tareas para implementar EIGRP ECMP 
+
+1. Comprueba la conectividad de PC1 a las redes LAN de R1 (192.168.0.1 y 192.168.1.1). Verifica en R5 cómo se aprenden las redes LAN de R1 (192.168.0.0 y 192.168.1.0)
+2. Verifica en la topología de EIGRP en R5 las redes LAN de R1, que métricas tienen los diferentes anuncios desde los neighbors ? Verifica la configuración ECMP asociada a R5
+3. Deshabilita ECMP en el proceso EIGRP nombrado como "enarsi" en R5 y verifica como se visualizan las redes LAN de R1 (192.168.0.1 y 192.168.1.1)
+4. Inyecta una default-route en R1 y verifica en R5 como se visualizan las redes LAN de R1 (192.168.0.1 y 192.168.1.1), siguen siendo accesibles desde PC1
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,238 @@
+CCNP ENARSI
+Curso: EIGRP & EIGRPv6
+Laboratorio: ECMP
+Firmware: Routers  -> c7200-advipservicesk9-mz.152-4.S5.bin
+         
+	 
+Escenario: Openwebinars requiere modificar su entorno WAN mediante el uso de ECMP
+
+Realiza las siguientes tareas para implementar EIGRP ECMP 
+
+1. Comprueba la conectividad de PC1 a las redes LAN de R1 (192.168.0.1 y 192.168.1.1). Verifica en R5 cómo se aprenden las redes LAN de R1 (192.168.0.0 y 192.168.1.0)
+
+PC1> ping 192.168.0.1
+84 bytes from 192.168.0.1 icmp_seq=1 ttl=253 time=78.273 ms
+84 bytes from 192.168.0.1 icmp_seq=2 ttl=253 time=78.355 ms
+
+PC1> ping 192.168.1.1
+84 bytes from 192.168.1.1 icmp_seq=1 ttl=253 time=78.461 ms
+84 bytes from 192.168.1.1 icmp_seq=2 ttl=253 time=78.831 ms
+
+PC1>
+
+R5#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      1.0.0.0/30 is subnetted, 1 subnets
+D        1.1.1.0 [90/153600] via 4.4.4.1, 00:01:28, FastEthernet1/0
+      2.0.0.0/30 is subnetted, 1 subnets
+D        2.2.2.0 [90/153600] via 5.5.5.1, 00:01:28, FastEthernet0/0
+      3.0.0.0/30 is subnetted, 1 subnets
+D        3.3.3.0 [90/153600] via 6.6.6.1, 00:01:33, FastEthernet3/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, FastEthernet1/0
+L        4.4.4.2/32 is directly connected, FastEthernet1/0
+      5.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        5.5.5.0/30 is directly connected, FastEthernet0/0
+L        5.5.5.2/32 is directly connected, FastEthernet0/0
+      6.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        6.6.6.0/30 is directly connected, FastEthernet3/0
+L        6.6.6.2/32 is directly connected, FastEthernet3/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+D     192.168.0.0/24 [90/2713600] via 6.6.6.1, 00:01:28, FastEthernet3/0
+                     [90/2713600] via 5.5.5.1, 00:01:28, FastEthernet0/0
+                     [90/2713600] via 4.4.4.1, 00:01:28, FastEthernet1/0
+D     192.168.1.0/24 [90/2713600] via 6.6.6.1, 00:01:28, FastEthernet3/0
+                     [90/2713600] via 5.5.5.1, 00:01:28, FastEthernet0/0
+                     [90/2713600] via 4.4.4.1, 00:01:28, FastEthernet1/0
+R5#
+
+_____________________________________________________________________________________
+
+2. Verifica en la topología de EIGRP en R5 las redes LAN de R1, que métricas tienen los diferentes anuncios desde los neighbors ?
+
+Respuesta: tienen la misma métrica los anuncios desde R2, R3 y R4
+
+R5#show ip eigrp topology
+EIGRP-IPv4 VR(enarsi) Topology Table for AS(100)/ID(5.5.5.5)
+Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply,
+       r - reply Status, s - sia Status
+
+P 5.5.5.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet0/0
+P 192.168.0.0/24, 3 successors, FD is 347340800
+        via 4.4.4.1 (347340800/340787200), FastEthernet1/0
+        via 5.5.5.1 (347340800/340787200), FastEthernet0/0
+        via 6.6.6.1 (347340800/340787200), FastEthernet3/0
+P 2.2.2.0/30, 1 successors, FD is 19660800
+        via 5.5.5.1 (19660800/13107200), FastEthernet0/0
+P 192.168.1.0/24, 3 successors, FD is 347340800
+        via 4.4.4.1 (347340800/340787200), FastEthernet1/0
+        via 5.5.5.1 (347340800/340787200), FastEthernet0/0
+        via 6.6.6.1 (347340800/340787200), FastEthernet3/0
+P 6.6.6.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet3/0
+P 3.3.3.0/30, 1 successors, FD is 19660800
+        via 6.6.6.1 (19660800/13107200), FastEthernet3/0
+P 1.1.1.0/30, 1 successors, FD is 19660800
+        via 4.4.4.1 (19660800/13107200), FastEthernet1/0
+P 4.4.4.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet1/0
+P 10.10.10.0/24, 1 successors, FD is 13107200
+        via Connected, FastEthernet2/0
+
+R5#show ip protocols | in Maximum path
+      Maximum path: 4
+  Maximum path: 4
+
+_____________________________________________________________________________________
+
+3. Deshabilita ECMP en el proceso EIGRP nombrado como "enarsi" en R5 y verifica como se visualizan las redes LAN de R1 (192.168.0.1 y 192.168.1.1)
+
+R5#
+R5#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R5(config)#router eigrp enarsi
+R5(config-router)#address-family ipv4 unicast autonomous-system 100
+R5(config-router-af)#topology base
+R5(config-router-af-topology)#maximum-paths 1
+R5(config-router-af-topology)#end
+R5#
+
+R5#show ip route | begin Gateway
+Gateway of last resort is not set
+
+      1.0.0.0/30 is subnetted, 1 subnets
+D        1.1.1.0 [90/153600] via 4.4.4.1, 00:01:14, FastEthernet1/0
+      2.0.0.0/30 is subnetted, 1 subnets
+D        2.2.2.0 [90/153600] via 5.5.5.1, 00:01:14, FastEthernet0/0
+      3.0.0.0/30 is subnetted, 1 subnets
+D        3.3.3.0 [90/153600] via 6.6.6.1, 00:01:14, FastEthernet3/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, FastEthernet1/0
+L        4.4.4.2/32 is directly connected, FastEthernet1/0
+      5.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        5.5.5.0/30 is directly connected, FastEthernet0/0
+L        5.5.5.2/32 is directly connected, FastEthernet0/0
+      6.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        6.6.6.0/30 is directly connected, FastEthernet3/0
+L        6.6.6.2/32 is directly connected, FastEthernet3/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+D     192.168.0.0/24 [90/2713600] via 4.4.4.1, 00:01:14, FastEthernet1/0
+D     192.168.1.0/24 [90/2713600] via 4.4.4.1, 00:01:14, FastEthernet1/0
+R5#
+R5#show ip eigrp topology
+EIGRP-IPv4 VR(enarsi) Topology Table for AS(100)/ID(5.5.5.5)
+Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply,
+       r - reply Status, s - sia Status
+
+P 5.5.5.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet0/0
+P 192.168.0.0/24, 1 successors, FD is 347340800
+        via 4.4.4.1 (347340800/340787200), FastEthernet1/0
+        via 5.5.5.1 (347340800/340787200), FastEthernet0/0
+        via 6.6.6.1 (347340800/340787200), FastEthernet3/0
+P 2.2.2.0/30, 1 successors, FD is 19660800
+        via 5.5.5.1 (19660800/13107200), FastEthernet0/0
+P 192.168.1.0/24, 1 successors, FD is 347340800
+        via 4.4.4.1 (347340800/340787200), FastEthernet1/0
+        via 5.5.5.1 (347340800/340787200), FastEthernet0/0
+        via 6.6.6.1 (347340800/340787200), FastEthernet3/0
+P 6.6.6.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet3/0
+P 3.3.3.0/30, 1 successors, FD is 19660800
+        via 6.6.6.1 (19660800/13107200), FastEthernet3/0
+P 1.1.1.0/30, 1 successors, FD is 19660800
+        via 4.4.4.1 (19660800/13107200), FastEthernet1/0
+P 4.4.4.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet1/0
+P 10.10.10.0/24, 1 successors, FD is 13107200
+        via Connected, FastEthernet2/0
+
+R5#
+_____________________________________________________________________________________
+
+4. Inyecta una default-route en R1 y verifica en R5 como se visualizan las redes LAN de R1 (192.168.0.1 y 192.168.1.1), siguen siendo accesibles desde PC1
+
+Respuesta: No se visualizan, únicamente se visualiza la ruta por defecto, en la tabla de la topología sucede lo mismo. Si, siguen siendo accesibles las redes LAN de R1 desde PC1
+
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#int fa0/0
+R1(config-if)#ip summary-address eigrp 100 0.0.0.0 0.0.0.0
+R1(config-if)#exit
+R1(config)#
+R1(config)#int fa1/0
+R1(config-if)#ip summary-address eigrp 100 0.0.0.0 0.0.0.0
+R1(config-if)#exit
+R1(config)#int fa2/0
+R1(config-if)#ip summary-address eigrp 100 0.0.0.0 0.0.0.0
+R1(config-if)#end
+R1#
+
+R5#show ip route | begin Gateway
+Gateway of last resort is 4.4.4.1 to network 0.0.0.0
+
+D*    0.0.0.0/0 [90/204800] via 4.4.4.1, 00:01:19, FastEthernet1/0
+      1.0.0.0/30 is subnetted, 1 subnets
+D        1.1.1.0 [90/153600] via 4.4.4.1, 00:06:20, FastEthernet1/0
+      2.0.0.0/30 is subnetted, 1 subnets
+D        2.2.2.0 [90/153600] via 5.5.5.1, 00:06:20, FastEthernet0/0
+      3.0.0.0/30 is subnetted, 1 subnets
+D        3.3.3.0 [90/153600] via 6.6.6.1, 00:06:20, FastEthernet3/0
+      4.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        4.4.4.0/30 is directly connected, FastEthernet1/0
+L        4.4.4.2/32 is directly connected, FastEthernet1/0
+      5.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        5.5.5.0/30 is directly connected, FastEthernet0/0
+L        5.5.5.2/32 is directly connected, FastEthernet0/0
+      6.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        6.6.6.0/30 is directly connected, FastEthernet3/0
+L        6.6.6.2/32 is directly connected, FastEthernet3/0
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.10.10.0/24 is directly connected, FastEthernet2/0
+L        10.10.10.1/32 is directly connected, FastEthernet2/0
+R5#
+R5#
+R5#show ip eigrp topology
+EIGRP-IPv4 VR(enarsi) Topology Table for AS(100)/ID(5.5.5.5)
+Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply,
+       r - reply Status, s - sia Status
+
+P 5.5.5.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet0/0
+P 2.2.2.0/30, 1 successors, FD is 19660800
+        via 5.5.5.1 (19660800/13107200), FastEthernet0/0
+P 0.0.0.0/0, 1 successors, FD is 26214400
+        via 4.4.4.1 (26214400/19660800), FastEthernet1/0
+        via 6.6.6.1 (26214400/19660800), FastEthernet3/0
+        via 5.5.5.1 (26214400/19660800), FastEthernet0/0
+P 6.6.6.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet3/0
+P 3.3.3.0/30, 1 successors, FD is 19660800
+        via 6.6.6.1 (19660800/13107200), FastEthernet3/0
+P 1.1.1.0/30, 1 successors, FD is 19660800
+        via 4.4.4.1 (19660800/13107200), FastEthernet1/0
+P 4.4.4.0/30, 1 successors, FD is 13107200
+        via Connected, FastEthernet1/0
+P 10.10.10.0/24, 1 successors, FD is 13107200
+        via Connected, FastEthernet2/0
+
+R5#
+
+PC1> ping 192.168.1.1
+84 bytes from 192.168.1.1 icmp_seq=1 ttl=253 time=78.474 ms
+84 bytes from 192.168.1.1 icmp_seq=2 ttl=253 time=78.487 ms
+
+PC1> ping 192.168.0.1
+84 bytes from 192.168.0.1 icmp_seq=1 ttl=253 time=93.076 ms
+84 bytes from 192.168.0.1 icmp_seq=2 ttl=253 time=78.580 ms
+
+PC1>
+
+_____________________________________________________________________________________
+
